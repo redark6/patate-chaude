@@ -12,20 +12,19 @@ fn to_send_messsage_size(message: &str) -> [u8; 4]{
 
 fn messages(mut stream: TcpStream, message: &str) {
     const MESSAGE_PREFIX_SIZE: usize = 4;
-    let mut count = 0;
 
-    stream.write(&to_send_messsage_size(message));
-    stream.write(message.as_bytes());
+    stream.write(&to_send_messsage_size(message)).ok();
+    stream.write(message.as_bytes()).ok();
 
     let mut message_prefix_bytes = [0u8; MESSAGE_PREFIX_SIZE];
-    stream.read(&mut message_prefix_bytes);
+    stream.read(&mut message_prefix_bytes).ok();
     let received_message_size = u32::from_be_bytes(message_prefix_bytes);
     println!("{}", received_message_size);
 
     let message_size: usize = received_message_size.try_into().unwrap();
 
     let mut message_bytes = vec![0u8; message_size];
-    stream.read(&mut message_bytes);
+    stream.read(&mut message_bytes).ok();
     let received_message =  std::str::from_utf8(&message_bytes).expect("valid utf8");
     println!("{}", received_message);
 }
