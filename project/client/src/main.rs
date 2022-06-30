@@ -10,7 +10,7 @@ fn to_send_messsage_size(message: &str) -> [u8; 4]{
 
 }
 
-fn messages(mut stream: TcpStream, message: &str) -> String {
+fn messages(stream: &mut TcpStream, message: &str) -> String {
     const MESSAGE_PREFIX_SIZE: usize = 4;
 
     stream.write(&to_send_messsage_size(message)).ok();
@@ -38,10 +38,10 @@ fn main() {
 
     println!("Tentative de connexion au serveur...");
     match TcpStream::connect("127.0.0.1:7878") {
-        Ok(stream) => {
+        Ok(mut stream) => {
             println!("Connexion au serveur réussie !");
-            println!("{}", messages(stream.try_clone().unwrap(), message));
-            println!("{}", messages(stream.try_clone().unwrap(), message2));
+            println!("{}", messages(&mut stream, message));
+            println!("{}", messages(&mut stream, message2));
         }
         Err(e) => {
             println!("La connexion au serveur a échoué : {}", e);
