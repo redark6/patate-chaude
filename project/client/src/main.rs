@@ -26,7 +26,7 @@ fn main() {
             let leaderboard = Message::PublicLeaderBoard(leaderboard_msg);
 
             let mut msg_arrived= serde_json::to_string(&leaderboard).unwrap();
-            
+
             print!("{}", msg_arrived);
 
             send(&mut stream, leaderboard);
@@ -111,9 +111,10 @@ enum Message {
     Subscribe(Subscribe),
     SubscribeResult(SubscribeResult),
     PublicLeaderBoard(PublicLeaderBoard),
+    Challenge(Challenge),
+    ChallengeAnswer(ChallengeAnswer),
     RoundSummary(RoundSummary),
-    //EndOfGame(EndOfGame),
-
+    EndOfGame(EndOfGame),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -129,22 +130,36 @@ struct PublicPlayer {
     total_used_time: f64
 }
 
-//ChallengeOutput
+//pub enum ChallengeOuput {}
 
-pub struct Challenge {
-    // enum {
-    //      ChallengeName(ChallengeInput)
-    // }
+//pub enum ChallengeInput {}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MD5HashCashInput {
+    pub complexity: u32,
+    pub message: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MD5HashCashOutput {
+    pub seed: u64,
+    pub hashcode: String,
 }
 
-// pub enum ChallengeAnswer {
-//    ChallengeName(ChallengeOutput)
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Challenge {
+    MD5HashCash(MD5HashCashInput),
+   // Maze(MazeInput)
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ChallengeAnswer {
+   MD5HashCash(MD5HashCashOutput),
+  // Maze(MazeOutput)
+}
 
-// pub struct ChallengeResult {
-//     answer: ChallengeAnswer,
-//     next_target: String
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChallengeResult {
+    answer: ChallengeAnswer,
+    next_target: String
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ChallengeValue {
@@ -166,7 +181,7 @@ pub struct RoundSummary {
     chain: Vec<ReportedChallengeResult>
 }
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct EndOfGame{
-//     leader_board: crate::Message
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EndOfGame{
+    leader_board: PublicLeaderBoard
+}
