@@ -25,8 +25,9 @@ fn main() {
         
             let leaderboard = Message::PublicLeaderBoard(leaderboard_msg);
 
-            let msg_arrived= serde_json::to_string(&leaderboard_msg).unwrap();
-            println!("{}", msg_arrived);
+            let mut msg_arrived= serde_json::to_string(&leaderboard).unwrap();
+            
+            print!("{}", msg_arrived);
 
             send(&mut stream, leaderboard);
 
