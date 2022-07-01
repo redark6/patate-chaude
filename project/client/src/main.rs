@@ -11,8 +11,24 @@ fn main() {
             let hello = Message::Hello;
             send(&mut stream, hello);
 
-            let subscribe = Message::Subscribe(Subscribe { name: "Nelson".parse().unwrap() });
+            let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
             send(&mut stream, subscribe);
+
+            let leaderboard_msg = PublicLeaderBoard(vec![PublicPlayer {
+                is_active: true,
+                name: "Romain".to_string(),
+                score: 0,
+                steps: 0,
+                stream_id: "127.0.0.1".to_string(),
+                total_used_time: 0.0
+            }]);
+        
+            let leaderboard = Message::PublicLeaderBoard(leaderboard_msg);
+
+            let msg_arrived= serde_json::to_string(&leaderboard_msg).unwrap();
+            println!("{}", msg_arrived);
+
+            send(&mut stream, leaderboard);
 
             let array = [0; 4];
             receive(&mut stream, array);
@@ -93,16 +109,14 @@ enum Message {
     Welcome(Welcome),
     Subscribe(Subscribe),
     SubscribeResult(SubscribeResult),
-    PublicLeaderBoard(PublicPlayerLeaderBoard),
+    PublicLeaderBoard(PublicLeaderBoard),
     RoundSummary(RoundSummary),
-    EndOfGame(EndOfGame),
+    //EndOfGame(EndOfGame),
 
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct PublicPlayerLeaderBoard {
-     Tuple<String,Vec<PublicPlayer>>
-}
+struct PublicLeaderBoard(Vec<PublicPlayer>);
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PublicPlayer {
@@ -114,40 +128,6 @@ struct PublicPlayer {
     total_used_time: f64
 }
 
-// pub struct Hello {
-//     body: String // il n'y a pas de body ?
-// }
-
-// pub struct Welcome {
-//     version: u8
-// }
-// pub struct Subscribe {
-//     name: String
-// }
-// pub enum SubscribeError{
-//     AlreadyRegistered, InvalidName
-// }
-
-// pub enum BodySubscribeResult {
-//     Ok, Err(SubscribeError) 
-// }
-// pub struct SubscribeResult {
-//     a: BodySubscribeResult // pas de a
-// }
-
-// pub struct PublicPlayer {
-//     name: String,
-//     stream_id: String,
-//     score: i32,
-//     steps: u32,
-//     is_active: bool,
-//     total_used_time: f64,
-// }
-
-// pub struct PublicLeaderBoard {
-//   // .0: Vec<PublicPlayer>
-// }
-
 //ChallengeOutput
 
 pub struct Challenge {
@@ -156,14 +136,14 @@ pub struct Challenge {
     // }
 }
 
-pub enum ChallengeAnswer {
-   ChallengeName(ChallengeOutput)
-}
+// pub enum ChallengeAnswer {
+//    ChallengeName(ChallengeOutput)
+// }
 
-pub struct ChallengeResult {
-    answer: ChallengeAnswer,
-    next_target: String
-}
+// pub struct ChallengeResult {
+//     answer: ChallengeAnswer,
+//     next_target: String
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ChallengeValue {
@@ -185,7 +165,7 @@ pub struct RoundSummary {
     chain: Vec<ReportedChallengeResult>
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct EndOfGame{
-    leader_board: PublicLeaderBoard
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct EndOfGame{
+//     leader_board: crate::Message
+// }
