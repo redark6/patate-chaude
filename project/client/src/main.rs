@@ -8,37 +8,37 @@ fn main() {
     match stream {
         Ok(mut stream ) => {
 
+            let array = [0; 4];
             let hello = Message::Hello;
             send(&mut stream, hello);
 
-            let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
-            send(&mut stream, subscribe);
+            // let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
+            // send(&mut stream, subscribe);
 
-            let leaderboard_msg = PublicLeaderBoard(vec![PublicPlayer {
-                is_active: true,
-                name: "Romain".to_string(),
-                score: 0,
-                steps: 0,
-                stream_id: "127.0.0.1".to_string(),
-                total_used_time: 0.0
-            }]);
-        
-            let leaderboard = Message::PublicLeaderBoard(leaderboard_msg);
+             while 5 != 2 {
+                let value = &receive(&mut stream, array); 
+                match value {
+                    Ok(v) => { 
+                        println!("message = {v:?}");
+                        println!("{}", std::mem::discriminant(v))
+                        //    std::mem::discriminant(a) == std::mem::discriminant(b)
 
-            let mut msg_arrived= serde_json::to_string(&leaderboard).unwrap();
+                    },
+                    Err(err) => println!("error = {err:?}")
+                }
+               
+             }
 
-            print!("{}", msg_arrived);
+             print!("quit");
 
-            send(&mut stream, leaderboard);
+            
+            // receive(&mut stream, array); //challenge
 
-            let array = [0; 4];
-            receive(&mut stream, array); //challenge
+            // let array_2 = [0; 4];
+            // receive(&mut stream, array_2); //roundsummary
 
-            let array_2 = [0; 4];
-            receive(&mut stream, array_2); //roundsummary
-
-            let array_3 = [0; 4];
-            receive(&mut stream, array_3); //edofgame
+            // let array_3 = [0; 4];
+            // receive(&mut stream, array_3); //edofgame
 
 
         }
@@ -46,7 +46,7 @@ fn main() {
     }
 }
 
-fn receive(stream: &mut TcpStream, mut array: [u8; 4]) {
+fn receive(stream: &mut TcpStream, mut array: [u8; 4]) -> Result<Message, serde_json::Error> {
     stream.read( &mut array).unwrap();
 
     let size_message: u32 = u32::from_be_bytes(array);
@@ -66,10 +66,7 @@ fn receive(stream: &mut TcpStream, mut array: [u8; 4]) {
     let first_last_off: &str = &a[1..a.len() - 1];
     let message: Result<Message, _> = serde_json::from_str(&first_last_off);
 
-    match message {
-        Ok(m) => println!("message={m:?}"),
-        Err(err) => println!("error={err:?}")
-    }
+    return message;
 }
 
 fn send(stream: &mut TcpStream, message_to_send: Message) {
