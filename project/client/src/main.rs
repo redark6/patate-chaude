@@ -32,13 +32,13 @@ fn main() {
             send(&mut stream, leaderboard);
 
             let array = [0; 4];
-            receive(&mut stream, array);
+            receive(&mut stream, array); //challenge
 
             let array_2 = [0; 4];
-            receive(&mut stream, array_2);
+            receive(&mut stream, array_2); //roundsummary
 
             let array_3 = [0; 4];
-            receive(&mut stream, array_3);
+            receive(&mut stream, array_3); //edofgame
 
 
         }
