@@ -138,6 +138,7 @@ pub struct MD5HashCashInput {
     pub complexity: u32,
     pub message: String,
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MD5HashCashOutput {
     pub seed: u64,
@@ -145,14 +146,39 @@ pub struct MD5HashCashOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct MonstrousMazeInput {
+    pub grid: String,
+    pub endurance: u8,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MonstrousMazeOutput {
+    pub path: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecoverSecretInput {
+    pub word_count: usize,
+    pub letters: String,
+    pub tuple_sizes: Vec<usize>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecoverSecretOutput {
+    pub secret_sentence: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Challenge {
     MD5HashCash(MD5HashCashInput),
-   // Maze(MazeInput)
+    MonstrousMaze(MonstrousMazeInput),
+    RecoverSecret(RecoverSecretInput)
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ChallengeAnswer {
    MD5HashCash(MD5HashCashOutput),
-  // Maze(MazeOutput)
+   MonstrousMaze(MonstrousMazeOutput),
+   RecoverSecret(RecoverSecretOutput)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
