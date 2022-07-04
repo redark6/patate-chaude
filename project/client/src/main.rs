@@ -15,13 +15,15 @@ fn main() {
             // let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
             // send(&mut stream, subscribe);
 
-             while 5 != 2 {
-                let value = &receive(&mut stream, array); 
-                match value {
+             loop {
+                let message = &receive(&mut stream, array); 
+                match message {
                     Ok(v) => { 
                         println!("message = {v:?}");
-                        println!("{}", std::mem::discriminant(v))
-                        //    std::mem::discriminant(a) == std::mem::discriminant(b)
+                        if let Message::Welcome(..) = v {
+                            break;
+                        }
+                       
 
                     },
                     Err(err) => println!("error = {err:?}")
