@@ -17,20 +17,21 @@ use crate::hash_cash_challenge::challenge::Challenge;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
+    if args.len() < 3 {
       return;
     }
     let ip = String::from(&args[1]);
-    //"127.0.0.1:7878"
+    let name = String::from(&args[2]);
     let stream = std::net::TcpStream::connect(ip);
     match stream {
         Ok(mut stream ) => {
 
             let array = [0; 4];
             let hello = Message::Hello;
+            let mut nex_target = "".to_string();
             send(&mut stream, hello);
 
-             let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
+             let subscribe = Message::Subscribe(Subscribe { name: name.parse().unwrap() });
              send(&mut stream, subscribe);
 
              loop {
@@ -41,29 +42,30 @@ fn main() {
                         if let Message::EndOfGame(..) = v {
                             break;
                         }
+                        if let Message::PublicLeaderBoard(board) = v {
+                            nex_target = board.0[board.0.len() - 1].name.clone();
+                        }
+
                         if let Message::Challenge(mes) = v {
-
                             if let Challenges::MD5HashCash(input) = mes {
-                                let test = input.to_owned();
-                                let hash = HashCash::new(input.to_owned());
+                                let inputValue = MD5HashCashInput{complexity: input.complexity.clone() ,message: input.message.clone()};
+                                let hash = HashCash::new(inputValue);
                                 let res = hash.solve();
-                                send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MD5HashCash(res), next_target: "blablo".to_string()}));
+                                send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MD5HashCash(res), next_target: nex_target.clone()}));
+                            }
 
+                            if let Challenges::MonstrousMaze(input) = mes {
+                                let inputValue = MonstrousMazeInput{grid: input.grid.clone() ,endurance: input.endurance.clone()};
+                                let maze = MonstrousMaze::new(inputValue);
+                                let res = maze.solve();
+                                send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MonstrousMaze(res), next_target: nex_target.clone()}));
+                            }
+
+                            if let Challenges::RecoverSecret(input) = mes {
+                                let res = RecoverSecretOutput{secret_sentence : "".to_string()};
+                                send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::RecoverSecret(res), next_target: nex_target.clone()}));
                             }
                         }
-                        if let Message::Challenge(mes) = v {
-                            //let x = std::mem::transmute::<&Challenges,MonstrousMazeInput >(mes);
-                            //let maze = MonstrousMaze::new(x);
-                            //let res = maze.solve();
-                            //send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MonstrousMaze(res), next_target: "blablo".to_string()}));
-                        }
-                        if let Message::Challenge(RecoverSecretInput) = v {
-                            //let hash = HashCash::new(v.MD5HashCash);
-                            //let res = hash.solve();
-                            //send(&mut stream,ChallengeAnswer(res));
-                        }
-                       
-
                     },
                     Err(err) => println!("error = {err:?}")
                 }

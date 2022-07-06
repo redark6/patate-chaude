@@ -1,4 +1,5 @@
 use std::io::Bytes;
+use std::ops::Deref;
 use std::thread;
 use rand::Rng;
 use md5;
