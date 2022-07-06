@@ -1,22 +1,28 @@
-<<<<<<< HEAD
 mod hash_cash_challenge;
 mod monstrous_maze_challenge;
 
-use crate::hash_cash_challenge::HashCash;
-use crate::monstrous_maze_challenge::MonstrousMaze;
+use crate::hash_cash_challenge::{HashCash, MD5HashCashInput, MD5HashCashOutput};
+use crate::monstrous_maze_challenge::{MonstrousMaze, MonstrousMazeInput, MonstrousMazeOutput};
+
+//use crate::hash_cash_challenge::challenge::Challenge;
+
+use std::io::{Read, Write};
+use std::mem::transmute;
+use std::net::TcpStream;
+use std::{env, str};
+use clap::builder::TypedValueParser;
+use serde::{Serialize, Deserialize};
 
 use crate::hash_cash_challenge::challenge::Challenge;
 
 fn main() {
-
-=======
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::str;
-use serde::{Serialize, Deserialize};
-
-fn main() {
-    let stream = std::net::TcpStream::connect("127.0.0.1:7878");
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+      return;
+    }
+    let ip = String::from(&args[1]);
+    //"127.0.0.1:7878"
+    let stream = std::net::TcpStream::connect(ip);
     match stream {
         Ok(mut stream ) => {
 
@@ -24,16 +30,37 @@ fn main() {
             let hello = Message::Hello;
             send(&mut stream, hello);
 
-            // let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
-            // send(&mut stream, subscribe);
+             let subscribe = Message::Subscribe(Subscribe { name: "Paprocki".parse().unwrap() });
+             send(&mut stream, subscribe);
 
              loop {
                 let message = &receive(&mut stream, array); 
                 match message {
-                    Ok(v) => { 
+                    Ok(v) => unsafe {
                         println!("message = {v:?}");
-                        if let Message::Welcome(..) = v {
+                        if let Message::EndOfGame(..) = v {
                             break;
+                        }
+                        if let Message::Challenge(mes) = v {
+
+                            if let Challenges::MD5HashCash(input) = mes {
+                                let test = input.to_owned();
+                                let hash = HashCash::new(input.to_owned());
+                                let res = hash.solve();
+                                send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MD5HashCash(res), next_target: "blablo".to_string()}));
+
+                            }
+                        }
+                        if let Message::Challenge(mes) = v {
+                            //let x = std::mem::transmute::<&Challenges,MonstrousMazeInput >(mes);
+                            //let maze = MonstrousMaze::new(x);
+                            //let res = maze.solve();
+                            //send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MonstrousMaze(res), next_target: "blablo".to_string()}));
+                        }
+                        if let Message::Challenge(RecoverSecretInput) = v {
+                            //let hash = HashCash::new(v.MD5HashCash);
+                            //let res = hash.solve();
+                            //send(&mut stream,ChallengeAnswer(res));
                         }
                        
 
@@ -58,7 +85,6 @@ fn main() {
         }
         Err(err) => panic!("Cannot connect: {err}")
     }
->>>>>>> 87ef07c122c1ef5473b4aac1630a001d27038379
 }
 
 fn receive(stream: &mut TcpStream, mut array: [u8; 4]) -> Result<Message, serde_json::Error> {
@@ -123,8 +149,8 @@ enum Message {
     Subscribe(Subscribe),
     SubscribeResult(SubscribeResult),
     PublicLeaderBoard(PublicLeaderBoard),
-    Challenge(Challenge),
-    ChallengeAnswer(ChallengeAnswer),
+    Challenge(Challenges),
+    ChallengeResult(ChallengeResult),
     RoundSummary(RoundSummary),
     EndOfGame(EndOfGame),
 }
@@ -145,6 +171,7 @@ struct PublicPlayer {
 //pub enum ChallengeOuput {}
 
 //pub enum ChallengeInput {}
+/*
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MD5HashCashInput {
     pub complexity: u32,
@@ -167,7 +194,7 @@ pub struct MonstrousMazeInput {
 pub struct MonstrousMazeOutput {
     pub path: String,
 }
-
+*/
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RecoverSecretInput {
     pub word_count: usize,
@@ -181,7 +208,7 @@ pub struct RecoverSecretOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum Challenge {
+pub enum Challenges {
     MD5HashCash(MD5HashCashInput),
     MonstrousMaze(MonstrousMazeInput),
     RecoverSecret(RecoverSecretInput)

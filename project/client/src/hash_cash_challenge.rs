@@ -7,12 +7,16 @@ use challenge::Challenge;
 pub (crate) mod challenge;
 use std::str;
 use md5::Digest;
+use serde::{Serialize, Deserialize};
 
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MD5HashCashInput {
     pub complexity: u32,
     pub message: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MD5HashCashOutput {
     pub seed: u64,
     pub hashcode: String,
