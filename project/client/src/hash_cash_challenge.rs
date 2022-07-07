@@ -4,8 +4,8 @@ use std::thread;
 use rand::Rng;
 use md5;
 use rand::rngs::ThreadRng;
-use challenge::Challenge;
-pub (crate) mod challenge;
+use challenge_trait::ChallengeTrait;
+pub (crate) mod challenge_trait;
 use std::str;
 use md5::Digest;
 use serde::{Serialize, Deserialize};
@@ -45,7 +45,7 @@ impl HashCash {
     }
 }
 
-impl Challenge for HashCash {
+impl ChallengeTrait for HashCash {
     type Input = MD5HashCashInput;
     type Output = MD5HashCashOutput;
 

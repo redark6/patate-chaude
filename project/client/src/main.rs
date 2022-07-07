@@ -4,7 +4,7 @@ mod monstrous_maze_challenge;
 use crate::hash_cash_challenge::{HashCash, MD5HashCashInput, MD5HashCashOutput};
 use crate::monstrous_maze_challenge::{MonstrousMaze, MonstrousMazeInput, MonstrousMazeOutput};
 
-//use crate::hash_cash_challenge::challenge::Challenge;
+use crate::hash_cash_challenge::challenge_trait::ChallengeTrait as c;
 
 use std::io::{Read, Write};
 use std::mem::transmute;
@@ -12,8 +12,8 @@ use std::net::TcpStream;
 use std::{env, str};
 use clap::builder::TypedValueParser;
 use serde::{Serialize, Deserialize};
+use crate::monstrous_maze_challenge::challenge_trait::ChallengeTrait;
 
-use crate::hash_cash_challenge::challenge::Challenge;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -37,8 +37,8 @@ fn main() {
              loop {
                 let message = &receive(&mut stream, array); 
                 match message {
-                    Ok(v) => unsafe {
-                        println!("message = {v:?}");
+                    Ok(v) => {
+                        //println!("message = {v:?}");
                         if let Message::EndOfGame(..) = v {
                             break;
                         }
@@ -47,32 +47,38 @@ fn main() {
                         }
 
                         if let Message::Challenge(mes) = v {
-                            if let Challenges::MD5HashCash(input) = mes {
+                            if let Challenge::MD5HashCash(input) = mes {
+                                //println!("{:?}","hash");
                                 let inputValue = MD5HashCashInput{complexity: input.complexity.clone() ,message: input.message.clone()};
                                 let hash = HashCash::new(inputValue);
                                 let res = hash.solve();
                                 send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MD5HashCash(res), next_target: nex_target.clone()}));
                             }
 
-                            if let Challenges::MonstrousMaze(input) = mes {
+                            if let Challenge::MonstrousMaze(input) = mes {
+                                //println!("{:?}","maze");
                                 let inputValue = MonstrousMazeInput{grid: input.grid.clone() ,endurance: input.endurance.clone()};
                                 let maze = MonstrousMaze::new(inputValue);
                                 let res = maze.solve();
                                 send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::MonstrousMaze(res), next_target: nex_target.clone()}));
                             }
 
-                            if let Challenges::RecoverSecret(input) = mes {
+                            if let Challenge::RecoverSecret(input) = mes {
+                                //println!("{:?}","secret");
                                 let res = RecoverSecretOutput{secret_sentence : "".to_string()};
                                 send(&mut stream,Message::ChallengeResult(ChallengeResult{answer: ChallengeAnswer::RecoverSecret(res), next_target: nex_target.clone()}));
                             }
                         }
                     },
-                    Err(err) => println!("error = {err:?}")
+                    Err(err) => {
+                        println!("error = {err:?}");
+                        break;
+                    }
                 }
                
              }
 
-             print!("quit");
+             //print!("quit");
 
             
             // receive(&mut stream, array); //challenge
@@ -90,18 +96,18 @@ fn main() {
 }
 
 fn receive(stream: &mut TcpStream, mut array: [u8; 4]) -> Result<Message, serde_json::Error> {
-    stream.read( &mut array).unwrap();
+    stream.read( &mut array);
 
     let size_message: u32 = u32::from_be_bytes(array);
     let size_message = size_message as usize;
     let mut vector = vec![0; size_message];
 
-    println!("{}",size_message);
+    //println!("{}",size_message);
 
-    stream.read(&mut vector).unwrap();
+    stream.read(&mut vector);
 
     let message_received = std::str::from_utf8(&*vector).unwrap();
-    println!("received: {}", message_received);
+    //println!("received: {}", message_received);
     let welcome_serialized = serde_json::to_string(&message_received).unwrap();
     let a = welcome_serialized.replace("\\", "");
 
@@ -114,12 +120,21 @@ fn receive(stream: &mut TcpStream, mut array: [u8; 4]) -> Result<Message, serde_
 
 fn send(stream: &mut TcpStream, message_to_send: Message) {
     let message_to_serialized = serde_json::to_string(&message_to_send);
+    //println!("{:?}",message_to_serialized);
     let message_to_serialized = message_to_serialized.unwrap();
+    //println!("{:?}","unwrap");
+    //println!("{:?}",message_to_serialized);
     let serialized_message_length_to_u32 = (message_to_serialized.len()) as u32;
 
     stream.write_all(&serialized_message_length_to_u32.to_be_bytes()).unwrap();
+    //println!("{:?}","unwrap1");
+    //println!("{:?}",&serialized_message_length_to_u32.to_be_bytes());
 
-    stream.write_all(&message_to_serialized.as_bytes()).unwrap();
+
+    //println!("{:?}","unwrap2");
+    //println!("{:?}",&message_to_serialized.as_bytes());
+    stream.write_all(&message_to_serialized.as_bytes());
+
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -151,7 +166,7 @@ enum Message {
     Subscribe(Subscribe),
     SubscribeResult(SubscribeResult),
     PublicLeaderBoard(PublicLeaderBoard),
-    Challenge(Challenges),
+    Challenge(Challenge),
     ChallengeResult(ChallengeResult),
     RoundSummary(RoundSummary),
     EndOfGame(EndOfGame),
@@ -210,7 +225,7 @@ pub struct RecoverSecretOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum Challenges {
+pub enum Challenge {
     MD5HashCash(MD5HashCashInput),
     MonstrousMaze(MonstrousMazeInput),
     RecoverSecret(RecoverSecretInput)

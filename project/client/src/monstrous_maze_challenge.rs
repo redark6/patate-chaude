@@ -1,5 +1,6 @@
-use crate::Challenge;
-pub (crate) mod challenge;
+use challenge_trait::ChallengeTrait;
+pub (crate) mod challenge_trait;
+
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -185,7 +186,7 @@ impl MonstrousMaze {
 
 }
 
-impl Challenge for MonstrousMaze {
+impl ChallengeTrait for MonstrousMaze {
     type Input = MonstrousMazeInput;
     type Output = MonstrousMazeOutput;
 
